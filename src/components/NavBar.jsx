@@ -1,9 +1,14 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 function Navbar({ cartCount, isLoggedIn }) {
   const [categories, setCategories] = useState([]);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const selectedCategory = location.pathname.startsWith("/category/")
+    ? location.pathname.split("/")[2]
+    : "";
 
   useEffect(() => {
     fetch("https://dummyjson.com/products/categories")
@@ -11,8 +16,8 @@ function Navbar({ cartCount, isLoggedIn }) {
       .then(data => {
         if (Array.isArray(data)) {
           const simplifiedCategories = data.map(cat => ({
-            slug: cat.slug,
-            name: cat.name
+            slug: cat.slug, 
+            name: cat.name.replace(/-/g, " ")
           }));
           setCategories(simplifiedCategories);
         } else {
@@ -25,8 +30,6 @@ function Navbar({ cartCount, isLoggedIn }) {
         setCategories([]);
       });
   }, []);
-  
-  
 
   return (
     <header className="bg-light border-bottom shadow-sm">
@@ -36,10 +39,10 @@ function Navbar({ cartCount, isLoggedIn }) {
           {categories.slice(0, 3).map((cat) => (
             <button
               key={cat.slug}
-              className="btn btn-link text-decoration-none text-capitalize"
-              onClick={() => {
-              navigate(`/category/${cat.slug}`);
-              }}
+              className={`btn btn-link text-decoration-none text-capitalize ${
+                selectedCategory === cat.slug ? "fw-bold text-primary" : ""
+              }`}
+              onClick={() => navigate(`/category/${cat.slug}`)}
             >
               {cat.name}
             </button>
