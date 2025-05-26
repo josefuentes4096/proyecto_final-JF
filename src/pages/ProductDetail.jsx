@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 function ProductDetail({ addToCart }) {
@@ -8,28 +8,48 @@ function ProductDetail({ addToCart }) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
+
     fetch(`https://dummyjson.com/products/${id}`)
-      .then(res => {
+      .then((res) => {
         if (!res.ok) throw new Error("Producto no encontrado");
         return res.json();
       })
-      .then(data => {
+      .then((data) => {
         setProduct(data);
-        setError(null);
       })
-      .catch(err => setError(err.message))
+      .catch((err) => {
+        console.error("Error al cargar el producto:", err);
+        setError("No se pudo cargar el producto.");
+      })
       .finally(() => setLoading(false));
   }, [id]);
 
   if (loading)
     return (
       <div className="text-center py-5">
-        <div className="spinner-border text-primary" role="status"></div>
+        <div className="spinner-border text-primary" role="status" />
+        <div className="mt-2 text-muted">Cargando producto...</div>
       </div>
     );
 
-  if (error) return <div className="alert alert-danger">{error}</div>;
-  if (!product) return null;
+  if (error)
+    return (
+      <div className="alert alert-danger text-center my-4">
+        {error}
+      </div>
+    );
+
+  if (!product)
+    return (
+      <div className="text-center my-5">
+        <h4 className="text-muted">Producto no encontrado.</h4>
+        <Link to="/" className="btn btn-outline-primary mt-3">
+          Volver al catálogo
+        </Link>
+      </div>
+    );
 
   return (
     <div className="row">
