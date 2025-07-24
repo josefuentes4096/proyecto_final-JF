@@ -1,61 +1,104 @@
 import { useEffect, useState } from "react";
-import ProductCard from "./ProductCard";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
-function ProductList({ addToCart, category, modo = "publico" }) {
+export default function ProductList() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [productos, setProductos] = useState([]);
-  const [error, setError] = useState(null);
-  const [cargando, setCargando] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    let url = "https://68100d8b27f2fdac24101ef5.mockapi.io/productos";
-    if (category) {
-      url += `?categoria=${category}`;
+    if (!user || user.rol !== "admin") {
+      navigate("/");
+      return;
     }
 
-    fetch(url)
-      .then((res) => {
-        if (!res.ok) throw new Error("Error al cargar productos");
-        return res.json();
-      })
-      .then((data) => {
-        setProductos(data);
-        setError(null);
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setCargando(false));
-  }, [category]);
+    const obtenerProductos = async () => {
+      try {
+        const respuesta = await axios.get(
+          "https://64e4e0f4c5556380291441ac.mockapi.io/productos"
+        );
+        setProductos(respuesta.data);
+      } catch (err) {
+        setError("Error al obtener productos.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleEliminar = (id) => {
-    if (!window.confirm("¿Seguro que desea eliminar este producto?")) return;
-    fetch(`https://6596e1c96bb4ec36ca02b81b.mockapi.io/productos/${id}`, {
-      method: "DELETE",
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Error al eliminar");
-        setProductos(productos.filter((prod) => prod.id !== id));
-      })
-      .catch((err) => setError(err.message));
+    obtenerProductos();
+  }, [user, navigate]);
+
+  const handleEditar = (id) => {
+    navigate(`/admin/editar/${id}`);
   };
 
-  if (cargando) return <p>Cargando productos...</p>;
-  if (error) return <p className="text-danger">Error: {error}</p>;
-  if (!productos.length) return <p>No hay productos disponibles.</p>;
+  const handleEliminar = async (id) => {
+    const confirmar = confirm("¿Estás seguro de eliminar este producto?");
+    if (!confirmar) return;
+
+    try {
+      await axios.delete(`https://64e4e0f4c5556380291441ac.mockapi.io/productos/${id}`);
+      setProductos(productos.filter((p) => p.id !== id));
+    } catch (err) {
+      alert("Error al eliminar el producto.");
+    }
+  };
+
+  if (loading) return <p>Cargando productos...</p>;
+  if (error) return <p className="text-danger">{error}</p>;
 
   return (
-    <div className="row g-4">
-      {productos.map((producto) => (
-		<div className="col-sm-6 col-md-4 col-lg-3">
-        <ProductCard
-          key={producto.id}
-          producto={producto}
-          modo={modo}
-          addToCart={addToCart}
-          onDelete={handleEliminar}
-        />
-		</div>
-      ))}
+    <div className="container mt-4">
+      <h2>Lista de Productos</h2>
+      {productos.length === 0 ? (
+        <p>No hay productos disponibles.</p>
+      ) : (
+        <table className="table table-striped">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Precio</th>
+              <th>Descripción</th>
+              <th>Imagen</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {productos.map((producto) => (
+              <tr key={producto.id}>
+                <td>{producto.nombre}</td>
+                <td>${producto.precio}</td>
+                <td>{producto.descripcion}</td>
+                <td>
+                  <img
+                    src={producto.imagen}
+                    alt={producto.nombre}
+                    style={{ width: "60px", height: "60px", objectFit: "cover" }}
+                  />
+                </td>
+                <td>
+                  <button
+                    className="btn btn-sm btn-warning me-2"
+                    onClick={() => handleEditar(producto.id)}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    className="btn btn-sm btn-danger"
+                    onClick={() => handleEliminar(producto.id)}
+                  >
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }
-
-export default ProductList;
