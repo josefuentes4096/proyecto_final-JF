@@ -1,39 +1,77 @@
 import { useCarrito } from "../contexts/CarritoContext";
+import { Container, Card, Button, Row, Col, Image } from "react-bootstrap";
 
-function Cart() {
-  const { productosCarrito, borrarProducto, vaciarCarrito } = useCarrito();
+export default function Cart() {
+  const { productos, agregarProducto, eliminarProducto, vaciarCarrito } = useCarrito();
 
-  const total = productosCarrito.reduce(
-    (sum, p) => sum + p.price * p.cantidad,
+  if (!productos) return <p>El carrito está vacío.</p>;
+
+  const total = productos.reduce(
+    (acum, prod) => acum + prod.price * prod.cantidad,
     0
   );
 
-  if (productosCarrito.length === 0) {
-    return <p>El carrito está vacío.</p>;
-  }
-
   return (
-    <div>
-      <h2>Carrito de Compras</h2>
-      <ul className="list-group mb-3">
-        {productosCarrito.map((p) => (
-          <li key={p.id} className="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-              {p.title} (x{p.cantidad})
-            </div>
-            <div>
-              <strong>${p.price * p.cantidad}</strong>
-              <button className="btn btn-sm btn-danger ms-3" onClick={() => borrarProducto(p.id)}>
-                Eliminar
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
-      <h4>Total: ${total}</h4>
-      <button className="btn btn-warning" onClick={vaciarCarrito}>Vaciar Carrito</button>
-    </div>
+    <Container>
+      <h2 className="mb-4">Carrito de Compras</h2>
+
+      {productos.length === 0 ? (
+        <p>El carrito está vacío.</p>
+      ) : (
+        <>
+          {productos.map((prod) => (
+            <Card key={prod.id} className="mb-3">
+              <Card.Body>
+                <Row className="align-items-center">
+                  <Col md={2}>
+                    <Image
+                      src={prod.thumbnail || prod.images?.[0]}
+                      alt={prod.title}
+                      fluid
+                      rounded
+                    />
+                  </Col>
+                  <Col md={4}>
+                    <h5>{prod.title}</h5>
+                    <p>${prod.price}</p>
+                  </Col>
+                  <Col md={3}>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => eliminarProducto(prod.id, 1)}
+                    >
+                      -
+                    </Button>{" "}
+                    <span className="mx-2">{prod.cantidad}</span>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => agregarProducto(prod)}
+                    >
+                      +
+                    </Button>
+                  </Col>
+                  <Col md={3}>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => eliminarProducto(prod.id, prod.cantidad)}
+                    >
+                      Eliminar
+                    </Button>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+          ))}
+
+          <h4 className="mt-4">Total: ${total.toFixed(2)}</h4>
+          <Button variant="outline-danger" onClick={vaciarCarrito}>
+            Vaciar Carrito
+          </Button>
+        </>
+      )}
+    </Container>
   );
 }
-
-export default Cart;

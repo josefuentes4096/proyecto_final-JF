@@ -1,33 +1,36 @@
-import { Link } from "react-router-dom";
-import { useContext } from "react";
-import { CarritoContext } from "../contexts/CarritoContext";
+import { Link, useNavigate } from "react-router-dom";
+import { useCarrito } from "../contexts/CarritoContext";
+import { useAuth } from "../contexts/AuthContext";
 
 function NavBar() {
-  const { productosCarrito } = useContext(CarritoContext);
+  const { productos } = useCarrito();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
-  const cantidadTotal = productosCarrito.reduce(
-    (total, producto) => total + producto.cantidad,
-    0
-  );
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-light bg-light px-4">
-      <div className="container-fluid">
-        <Link to="/" className="navbar-brand">
-          Mi E-Commerce
-        </Link>
-
-        <div className="d-flex gap-3 ms-auto">
-          <Link to="/login" className="btn btn-outline-primary">
-            Login
-          </Link>
-
-          <Link to="/cart" className="btn btn-outline-success">
-            Carrito ({cantidadTotal})
+    <header className="bg-light border-bottom shadow-sm">
+      <div className="container d-flex justify-content-between align-items-center py-3">
+        <Link to="/" className="text-decoration-none h5 text-dark">Mi eCommerce</Link>
+        <div className="d-flex gap-3">
+          {user ? (
+            <>
+              <span className="text-muted">Hola, {user}</span>
+              <button onClick={handleLogout} className="btn btn-outline-secondary">Logout</button>
+            </>
+          ) : (
+            <Link to="/login" className="btn btn-outline-primary">Login</Link>
+          )}
+          <Link to="/cart" className="btn btn-outline-primary">
+			Carrito ({productos?.length || 0})
           </Link>
         </div>
       </div>
-    </nav>
+    </header>
   );
 }
 
