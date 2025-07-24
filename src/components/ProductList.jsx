@@ -1,57 +1,58 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import ProductCard from "./ProductCard";
 
-function ProductList({ addToCart, category }) {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+function ProductList({ addToCart, category, modo = "publico" }) {
+  const [productos, setProductos] = useState([]);
   const [error, setError] = useState(null);
+  const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-
-    const url = category
-      ? `https://dummyjson.com/products/category/${category}`
-      : `https://dummyjson.com/products`;
+    let url = "https://68100d8b27f2fdac24101ef5.mockapi.io/productos";
+    if (category) {
+      url += `?categoria=${category}`;
+    }
 
     fetch(url)
       .then((res) => {
-        if (!res.ok) throw new Error("Error al cargar los productos");
+        if (!res.ok) throw new Error("Error al cargar productos");
         return res.json();
       })
       .then((data) => {
-        setProducts(data.products || []);
+        setProductos(data);
+        setError(null);
       })
-      .catch((err) => {
-        console.error("Error al obtener productos:", err);
-        setError("No se pudieron cargar los productos.");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      .catch((err) => setError(err.message))
+      .finally(() => setCargando(false));
   }, [category]);
 
-  if (loading)
-    return (
-      <div className="text-center py-5">
-        <div className="spinner-border text-primary" role="status" />
-        <div className="mt-2 text-muted">Cargando productos...</div>
-      </div>
-    );
+  const handleEliminar = (id) => {
+    if (!window.confirm("¿Seguro que desea eliminar este producto?")) return;
+    fetch(`https://6596e1c96bb4ec36ca02b81b.mockapi.io/productos/${id}`, {
+      method: "DELETE",
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Error al eliminar");
+        setProductos(productos.filter((prod) => prod.id !== id));
+      })
+      .catch((err) => setError(err.message));
+  };
 
-  if (error)
-    return (
-      <div className="alert alert-danger text-center my-4">
-        {error}
-      </div>
-    );
+  if (cargando) return <p>Cargando productos...</p>;
+  if (error) return <p className="text-danger">Error: {error}</p>;
+  if (!productos.length) return <p>No hay productos disponibles.</p>;
 
   return (
     <div className="row g-4">
-      {products.map((product) => (
-        <div key={product.id} className="col-sm-6 col-md-4 col-lg-3">
-          <ProductCard product={product} addToCart={addToCart} />
-        </div>
+      {productos.map((producto) => (
+		<div className="col-sm-6 col-md-4 col-lg-3">
+        <ProductCard
+          key={producto.id}
+          producto={producto}
+          modo={modo}
+          addToCart={addToCart}
+          onDelete={handleEliminar}
+        />
+		</div>
       ))}
     </div>
   );

@@ -25,15 +25,15 @@ export default function Cart() {
                 <Row className="align-items-center">
                   <Col md={2}>
                     <Image
-                      src={prod.thumbnail || prod.images?.[0]}
-                      alt={prod.title}
+                      src={prod.thumbnail || prod.imagen}
+                      alt={prod.name}
                       fluid
                       rounded
                     />
                   </Col>
-                  <Col md={4}>
-                    <h5>{prod.title}</h5>
-                    <p>${prod.price}</p>
+                  <Col md={3}>
+                    <h5>{prod.name}</h5>
+                    <p>Precio unitario: ${prod.price}</p>
                   </Col>
                   <Col md={3}>
                     <Button
@@ -52,7 +52,12 @@ export default function Cart() {
                       +
                     </Button>
                   </Col>
-                  <Col md={3}>
+                  <Col md={2}>
+                    <p className="fw-bold mb-0">
+                      Subtotal: ${ (prod.price * prod.cantidad).toFixed(2) }
+                    </p>
+                  </Col>
+                  <Col md={2}>
                     <Button
                       variant="danger"
                       size="sm"
